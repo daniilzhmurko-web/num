@@ -1,0 +1,1381 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<title>Нумерологический калькулятор (Rhythms Grid Update)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<!-- Подключаем Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  :root{font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color:#e5e7eb;}
+  body{background:#111827; padding:20px; margin:0;}
+  
+  /* Основной контейнер */
+  .card{background:#1f2937; border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,0.5); padding:24px; max-width:1200px; margin:0 auto; border: 1px solid #374151;}
+  
+  h1{margin:0 0 24px; font-size:28px; color:#f3f4f6; text-align: center; font-weight: 700;}
+  h3{margin:24px 0 12px; font-size:20px; color:#60a5fa; border-bottom: 1px solid #374151; padding-bottom: 8px;}
+  h4{margin:20px 0 10px; font-size:18px; color:#e5e7eb; border-left: 4px solid #60a5fa; padding-left: 10px;}
+  
+  hr{border:0; border-top:1px solid #374151; margin:24px 0;}
+  
+  /* --- НОВЫЙ СТИЛЬ ДЛЯ ВВОДА ДАННЫХ (Горизонтальный) --- */
+  .input-container {
+    display: flex;
+    justify-content: center;
+    gap: 60px; /* Расстояние между блоками Дата рождения и Дата прогноза */
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+  }
+  
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .group-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 12px;
+  }
+  .title-birth { color: #e5e7eb; }
+  .title-forecast { color: #60a5fa; }
+
+  .fields-row {
+    display: flex;
+    gap: 12px; /* Расстояние между полями День/Месяц/Год */
+  }
+
+  .field-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .field-label {
+    font-size: 13px;
+    color: #9ca3af;
+    font-weight: 500;
+  }
+
+  .styled-input {
+    width: 90px;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #4b5563;
+    background: #374151;
+    color: #fff;
+    font-size: 16px;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  
+  .styled-input:focus {
+    border-color: #60a5fa;
+    outline: none;
+    background: #4b5563;
+  }
+
+  /* Кнопки */
+  .btn-row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  
+  button{padding:12px 30px; border-radius:8px; border:0; background:#2563eb; color:#fff; cursor:pointer; font-size:16px; font-weight: 700; transition: background 0.2s; min-width: 140px;}
+  button:hover{background:#1d4ed8;}
+  #btnReset {background: #e2e8f0; color:#1f2937;}
+  #btnReset:hover {background: #cbd5e1;}
+
+  /* Результаты и тексты */
+  .result{background:#111827; border:1px solid #374151; padding:16px; border-radius:8px; color:#d1d5db; line-height: 1.6; font-size: 15px;}
+  .result-flex { display: flex; gap: 20px; align-items: center; justify-content: center; flex-wrap: wrap;}
+  
+  /* --- Стили для 9-летнего цикла (УВЕЛИЧЕННЫЙ ШРИФТ) --- */
+  .nine-year-block { 
+    margin: 20px 0; 
+    padding: 24px; 
+    background: #1f2937; 
+    border: 1px solid #374151; 
+    border-radius: 12px; 
+    display: flex; 
+    gap: 30px; 
+    align-items: flex-start; 
+  }
+  
+  .nine-year-list {
+    font-family: 'Consolas', monospace;
+    font-size: 14px; /* Увеличенный шрифт списка */
+    line-height: 1.8;
+    color: #e5e7eb;
+    margin: 0;
+  }
+
+  .nine-year-text {
+    font-size: 14px; /* Увеличенный шрифт интерпретации */
+    line-height: 1.6;
+    color: #d1d5db;
+  }
+
+  .nine-year-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #f3f4f6;
+    margin-bottom: 12px;
+  }
+
+  /* --- Стили для блока Характер Событий --- */
+  .period-section { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+  .period-card { background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 16px; position: relative; }
+  .period-header { display: flex; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #374151; padding-bottom: 8px; }
+  .roman-badge { background: #374151; color: #60a5fa; padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 1.1em; margin-right: 12px; }
+  .period-info { font-size: 0.9em; color: #9ca3af; }
+  .current-day-indicator { color: #10b981; font-weight: bold; margin-left: 5px; }
+  
+  .phase-list { list-style: none; padding: 0; margin: 0; }
+  .phase-item { padding: 8px 10px; border-left: 3px solid #374151; margin-bottom: 6px; color: #9ca3af; font-size: 0.9em; background: #1a1f2e; border-radius: 0 4px 4px 0; }
+  .phase-item.active-phase { border-left: 3px solid #10b981; background-color: rgba(16, 185, 129, 0.1); color: #e5e7eb; font-weight: 500; }
+  .phase-label { display: block; font-size: 0.8em; text-transform: uppercase; color: #6b7280; margin-bottom: 2px; }
+  .active-phase .phase-label { color: #10b981; font-weight: bold; }
+  .general-desc { line-height: 1.5; font-size: 0.95em; color: #d1d5db; }
+  .period-block-title { font-size: 16px; font-weight: bold; color: #f3f4f6; margin-bottom: 10px; }
+
+  /* Остальные стили */
+  .interp-grid { display: grid; gap: 20px; margin-top: 20px; }
+  .interp-card { background: #1f2937; border: 1px solid #374151; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+  .interp-header { background: linear-gradient(90deg, #1f2937 0%, #111827 100%); padding: 12px 20px; border-bottom: 1px solid #374151; display: flex; align-items: center; gap: 10px; }
+  .interp-badge { background: #2563eb; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; }
+  .interp-title { font-size: 16px; font-weight: 600; color: #e5e7eb; }
+  .interp-body { padding: 20px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .interp-section { background: #161e2e; padding: 15px; border-radius: 8px; border-left: 3px solid #4b5563; }
+  .interp-section.main { border-color: #f59e0b; }
+  .interp-section.career { border-color: #10b981; }
+  .interp-section.love { border-color: #ec4899; }
+  .interp-label { display: block; font-size: 11px; text-transform: uppercase; color: #9ca3af; margin-bottom: 6px; font-weight: 700; letter-spacing: 0.5px; }
+  .interp-text { font-size: 13px; color: #d1d5db; line-height: 1.5; }
+
+  .forecast-section{display:flex; gap:12px; align-items:flex-start; margin-bottom:12px; flex-wrap:wrap}
+  .calendar-view{display:flex; flex-direction:column; gap:4px; min-width:200px}
+  .day-cell{width:20px; height:20px; border-radius:3px; display:inline-block; margin:1px; border:1px solid #4b5563}
+  .compat-friend{background:#24c028}
+  .compat-neutral{background:#ff7626}
+  .compat-enemy{background:#ac0c0f}
+  
+  .chart-container { position: relative; height: 250px; width: 100%; min-width: 600px; background: #1f2937; border: 1px solid #374151; border-radius: 6px; padding: 10px; box-sizing: border-box; }
+  svg { display: block; width: 100%; }
+  .year-label-neon { font-size: 10px; font-weight: bold; fill: #ffffff; text-shadow: 0 0 4px rgba(96, 165, 250, 0.9), 0 0 2px rgba(59, 130, 246, 1); cursor: default; font-family: 'Consolas', 'Monaco', monospace; }
+  .rhythm-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-weight: bold; color: white; margin-bottom: 8px; }
+  .rhythm-grid-container { display: grid; grid-template-columns: repeat(9, 1fr); gap: 6px; min-width: 800px; }
+  .rhythm-header-cell { text-align: center; padding-bottom: 8px; border-bottom: 1px solid #374151; margin-bottom: 8px; }
+  .rhythm-cell { padding: 8px; text-align: center; border-radius: 4px; font-size: 13px; transition: transform 0.2s; }
+  .rhythm-cell:hover { transform: scale(1.1); z-index: 10; }
+
+  @media(max-width:768px){
+      .period-section { grid-template-columns: 1fr; }
+      .interp-body { grid-template-columns: 1fr; }
+      .input-container { flex-direction: column; gap: 20px; }
+      .nine-year-block{flex-direction: column;}
+      .result-flex { flex-direction: column; align-items: flex-start; }
+      .btn-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+<h1>Нумерологический калькулятор</h1>
+    
+    <div class="input-container">
+      <!-- Группа Дата рождения -->
+      <div class="input-group">
+          <div class="group-title title-birth">Дата рождения</div>
+          <div class="fields-row">
+            <div class="field-block">
+               <span class="field-label">День</span>
+               <input id="birthDay" class="styled-input" type="number" min="1" max="31" value="7">
+            </div>
+            <div class="field-block">
+               <span class="field-label">Месяц</span>
+               <input id="birthMonth" class="styled-input" type="number" min="1" max="12" value="3">
+            </div>
+            <div class="field-block">
+               <span class="field-label">Год</span>
+               <input id="birthYear" class="styled-input" type="number" min="1" value="1982">
+            </div>
+          </div>
+      </div>
+      
+      <!-- Группа Дата прогноза -->
+      <div class="input-group">
+          <div class="group-title title-forecast">Дата прогноза</div>
+          <div class="fields-row">
+            <div class="field-block">
+               <span class="field-label">День</span>
+               <input id="targetDay" class="styled-input" type="number" min="1" max="31">
+            </div>
+            <div class="field-block">
+               <span class="field-label">Месяц</span>
+               <input id="targetMonth" class="styled-input" type="number" min="1" max="12">
+            </div>
+            <div class="field-block">
+               <span class="field-label">Год</span>
+               <input id="targetYear" class="styled-input" type="number">
+            </div>
+          </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button id="btnCalc">Рассчитать</button>
+      <button id="btnReset">Сброс</button>
+    </div>
+
+    <div id="output"></div>
+    
+    <div id="visualization" style="display:none;margin-top:24px;">
+      <h3>Визуализация циклов жизни</h3>
+      <svg id="cyclesSvg" width="100%" height="400" style="background:#1f2937;border-radius:8px;border:1px solid #374151"></svg>
+      <div style="margin-top:8px;color:#9ca3af; font-size: 12px; text-align: center;">
+        <span style="color:#2b6ef6">━</span> Жизненные циклы &nbsp;&nbsp;
+        <span style="color:#10b981">━</span> 9-летние циклы &nbsp;&nbsp;
+        <span style="color:#f59e0b">●</span> 9-летние вехи &nbsp;&nbsp;
+        <span style="color:#ef4444">★</span> Эпохальные события
+      </div>
+
+      <div id="nineYearOutput"></div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  /* === БАЗА ДАННЫХ ХАРАКТЕРА СОБЫТИЙ (ДНИ) === */
+  const DAILY_INTERPRETATIONS = {
+    "I": { 
+        duration: 1, 
+        general: "Период позитивной активности и позитивных действий. В целом благоприятный. События могут вызвать эмоциональную приподнятость или возбуждение. Также могут сопровождаться нервными потрясениями, переживаниями. Вероятно, закончится разочарованием, которое может проявиться к концу дня/месяца. Для достижения благоприятного результата требуется соблюдать выдержку." 
+    },
+    "II": { 
+        duration: 1, 
+        general: "Проблемы в личной жизни и социальных контактах. Возможны эмоциональные потрясения и расходы (покупки, развлечения). День социального общения, контактов, вызывающих проблемы в отношениях. Доминирование Прарабха Кармы над Агама Кармой, что может привести к бездействию или пассивности." 
+    },
+    "III": { 
+        duration: 1, 
+        general: "Позитивный день для действий, бизнеса и деятельности. День, когда человек успевает. Происходит разрешение ситуаций, находится выход. Может произойти что-то неожиданное в позитивном смысле." 
+    },
+    "IV": { 
+        duration: 1, 
+        general: "Доминирование Прарабха Кармы. Могут произойти позитивные события, инициированные кармой. Может быть связан с путешествиями (дальними или за границу)." 
+    },
+    "V": { 
+        duration: 2, 
+        phases: [
+            "Нестабильность, много действий, возможны перемещения или дальние путешествия, в том числе за границу.", 
+            "Требуется прилагать большие усилия из-за сильного сопротивления. Возможен негативный результат."
+        ] 
+    },
+    "VI": { 
+        duration: 2, 
+        phases: [
+            "Начало процесса завершения, возможны позитивные тенденции.", 
+            "Процесс завершается, часто с положительным исходом. Благоприятен для начала процессов, которые могут быть завершены за короткий срок."
+        ] 
+    },
+    "VII": { 
+        duration: 2, 
+        general: "Связан с деньгами, собственностью, работой, бизнесом и деятельностью. Увеличение доходов и расходов. Благоприятен для финансовых и хозяйственных сделок. Могут быть проблемы или неприятности, связанные с этими сферами." 
+    },
+    "VIII": { 
+        duration: 2, 
+        general: "Волатильный период (колебания) и очень большая нестабильность. Могут происходить самые разные события. Ситуация пограничная." 
+    },
+    "IX": { 
+        duration: 3, 
+        phases: [
+            "Хаотические, странные или нелогичные действия и решения, нестабильное состояние психики.", 
+            "Наступает стабилизация, скрытые процессы выносятся на поверхность.", 
+            "Требуется особая осторожность при принятии решений. Позитивное задерживается или откладывается, плохое происходит сразу."
+        ] 
+    }
+  };
+
+  /* === БАЗА ДАННЫХ ХАРАКТЕРА СОБЫТИЙ (МЕСЯЦЫ) === */
+  const MONTHLY_INTERPRETATIONS = {
+    "I": { 
+        duration: 1, 
+        general: "Период позитивной активности и позитивных действий. В целом благоприятен. События могут вызвать эмоциональную приподнятость или возбуждение, а также сопровождаться нервными потрясениями, переживаниями. Для достижения благоприятного результата требуется соблюдать выдержку. К концу периода может наступить разочарование." 
+    },
+    "II": { 
+        duration: 1, 
+        general: "Проблемы в личной жизни и социальных контактах. Возможны эмоциональные потрясения и расходы (покупки, развлечения). День социального общения и контактов, которые могут вызвать проблемы в отношениях. Доминирование Прарабха Кармы над Агама Кармой, что приводит к пассивности или бездействию." 
+    },
+    "III": { 
+        duration: 1, 
+        general: "Позитивный период для действий, бизнеса и деятельности. Человек успевает. Происходит разрешение ситуаций, находится выход. Что-то неожиданное в позитивном смысле может произойти." 
+    },
+    "IV": { 
+        duration: 1, 
+        general: "Доминирование Прарабха Кармы. Возможны позитивные события, инициированные кармой. Часто связан с путешествиями (дальними или за границу)." 
+    },
+    "V": { 
+        duration: 2, 
+        phases: [
+            "Нестабильная ситуация, много действий, возможны перемещения или дальние поездки.", 
+            "Требуются большие усилия из-за сильного сопротивления; возможен негативный результат. Хорош для учебы, бизнеса и новых контактов."
+        ] 
+    },
+    "VI": { 
+        duration: 2, 
+        phases: [
+            "Начинается процесс завершения, возможны позитивные тенденции.", 
+            "Процесс завершается, часто с положительным исходом. Благоприятен для начала процессов, которые могут быть завершены за короткий срок."
+        ] 
+    },
+    "VII": { 
+        duration: 2, 
+        general: "Связан с деньгами, собственностью, работой, бизнесом и деятельностью. В этот период увеличатся как доходы, так и расходы. Хороший период для финансовых и хозяйственных сделок." 
+    },
+    "VIII": { 
+        duration: 2, 
+        general: "Волатильный период (колебания) и очень большая нестабильность. Могут происходить самые разные события. Ситуация пограничная." 
+    },
+    "IX": { 
+        duration: 3, 
+        phases: [
+            "Возможны хаотические, странные или нелогичные действия и решения, нестабильное состояние психики.", 
+            "Наступает некое улучшение и стабилизация, скрытые процессы выносятся на поверхность.", 
+            "Требуется особая осторожность в принятии решений и действий. Позитивные события могут задерживаться или откладываться."
+        ] 
+    }
+  };
+
+  /* === БАЗА ДАННЫХ РИТМОВ ЖИЗНИ (1-108) === */
+  const LIFE_RHYTHMS = {
+    1: { graha: "Сурья (Солнце)", color: "#f59e0b", trends: "Личностный рост и карьерный рост. Начало какого-то процесса, цикла, бизнеса. Стремление к известности, популярности. Год, благоприятный для начинаний и карьеры, налаживания отношений с начальством. Акцент на вопросах эго (аханкара) и одновременно божественной сущности (Атмана), в зависимости от уровня развития человека. Необходимо уделять особое внимание здоровью (Сурья — карака здоровья). Неблагоприятен для отношений, так как это карака эго. Хорошее время, чтобы распрощаться с прошлым и разорвать старые отношения (развестись). Если человек выходит замуж в этот год, он обязательно останется один." },
+    2: { graha: "Чандра (Луна)", color: "#e5e7eb", trends: "Очень хорошее время для отношений. Акцент на эмоциях, переживаниях и личной жизни. Благоприятен для отдыха, путешествий. Хороший год для здоровья, особенно связанного с жидкостями в организме (Чандра — карака жидкостей и лекарственных растений). Человек будет постоянно стоять перед выбором. Если совпадают семерка (Кету) и двойка, это может быть выбор от плохого к еще худшему." },
+    3: { graha: "Гуру (Юпитер)", color: "#fbbf24", trends: "Расширение, экспансия. Благоприятен для приобретений, инвестиций, заключения брака. Аспект детей (хорошо для зачатия). Может создавать впечатление большого богатства, что может привести к необоснованным расходам. В женском гороскопе Гуру — карака мужа." },
+    4: { graha: "Раху (Сев. узел)", color: "#6b7280", trends: "Год, когда проявляются в очень сильной степени прорабха-кармические события. Карма реализуется максимально. Может принести серьезные проблемы со здоровьем, особенно у тех, кто ведет неправильный образ жизни. Очень значимые события, которые могут повернуть жизнь в хорошую или плохую сторону. Может быть связан с тантрическими отношениями. Хорошо для занятия майтхуной." },
+    5: { graha: "Буддха (Меркурий)", color: "#10b981", trends: "Благоприятен для учебы, познания. Очень хороший год для бизнеса и деловой активности. Хорошее время для новых контактов (деловых), новых технологий, смены жилья или работы. Произойдут серьезные изменения в обстоятельствах жизни человека." },
+    6: { graha: "Шукра (Венера)", color: "#ec4899", trends: "Любовь, удовольствия, роскошь, деньги. Хороший год для бизнеса. Благоприятен для покупок, приобретений (в том числе недвижимости и автотранспорта). Идеален для брака." },
+    7: { graha: "Кету (Юж. узел)", color: "#8b5cf6", trends: "Трансформация сознания. Неопределенность (туман). Время реализации негативной Прорабха Кармы. Сексуальная энергия, тантра. Опасность серьезных проблем со здоровьем. Все события, даже не связанные напрямую, имеют корень в сексуальной энергии. Все, что начинается в этот год (кроме тантры), развалится. Хорошо для занятия майтхуной." },
+    8: { graha: "Шани (Сатурн)", color: "#3b82f6", trends: "Работа, деятельность, бизнес. Идеален для начала систематической работы. Финансовые вопросы, инвестиции, контракты. Год задержек и ограничений (Шани медленный Граха). Не очень благоприятен для личной жизни." },
+    9: { graha: "Мангал (Марс)", color: "#ef4444", trends: "Завершение цикла (девятилетнего). Очень активные, динамичные, решительные действия. Болезненный процесс завершения. Хорошее время для развода, судебных исков, агрессивных действий. Может быть связан с проблемами со здоровьем." }
+  };
+
+  const MONTHLY_DATA = {
+    1: ["V", "I, VII, VIII", "II, VII, VIII", "IX", "IX", "IX, VI", "III, VI", "IV", "V", "V", "I, VII, VIII", "II, VII, VIII"],
+    2: ["V, VII", "V, VII", "VI, I", "II, VI", "IX", "IX", "IX", "VIII, III", "VIII, IV", "V, VII", "V, VII", "I"],
+    3: ["V", "V, VIII", "V, VIII, VII", "VII, I", "II", "VI, IX", "VI, IX", "IX", "III", "IV", "V, VIII", "V, VIII, VII"],
+    4: ["III", "IV", "V, VII, VIII", "V, VII, VIII", "I", "II", "VI, IX", "VI, IX", "IX", "III", "IV", "V, VII, VIII"],
+    5: ["II", "III", "IV, VI", "V, VI", "V", "I", "II, VII", "IX, VIII, VII", "IX, VIII", "IX", "III", "IV"],
+    6: ["IX, VII", "VIII, IX", "VIII, III", "IV", "V", "V, VI", "I, VI", "II", "IX, VII", "IX, VII", "IX, VIII", "III, VIII"],
+    7: ["IX, VII", "IX, VII", "IX", "III, VIII", "IV, VIII", "V", "V", "I, VI", "II, VI", "VII, IX", "IX, VII", "IX"],
+    8: ["II, VII, VIII", "IX, VIII, VII", "IX", "IX", "III, VI", "IV, VI", "V", "V", "I", "II, VII, VIII", "IX, VIII, VII", "IX"],
+    9: ["I", "II", "IX, VIII, VII", "IX, VIII, VII", "IX", "III", "IV, VI", "V, VI", "V", "I", "II", "IX, VIII, VII"]
+  };
+
+  const DAILY_DATA = [
+    null,
+    {1:"V", 2:"V, VII", 3:"IV", 4:"III", 5:"IX", 6:"IX, VII", 7:"IX, VII", 8:"II, VII", 9:"I"},
+    {1:"I, VII, VI", 2:"V, VII", 3:"V, VI", 4:"IV", 5:"III", 6:"IX, VI", 7:"IX, VII", 8:"IX, VII", 9:"II"},
+    {1:"II, VII, VI", 2:"I, VIII", 3:"V, VII, VI", 4:"V, VII, VI", 5:"IV, VIII", 6:"III, VI", 7:"IX", 8:"IX", 9:"IX, VII, VI"},
+    {1:"IX", 2:"II, VIII", 3:"I, VII", 4:"V, VII, VI", 5:"VIII", 6:"IV", 7:"III, VI", 8:"IX", 9:"IX, VII, VI"},
+    {1:"IX", 2:"IX", 3:"II", 4:"I", 5:"V", 6:"V", 7:"IV, VI", 8:"III, VIII", 9:"IX"},
+    {1:"IX, VIII", 2:"IX", 3:"IX, VIII", 4:"II", 5:"V, I", 6:"V, VIII", 7:"V", 8:"IV, VIII", 9:"III, VIII"},
+    {1:"III", 2:"IX", 3:"IX, VIII", 4:"IX, VIII", 5:"II, VII", 6:"I, VIII", 7:"V", 8:"V", 9:"IV, VIII"},
+    {1:"IV", 2:"III, VI", 3:"IX", 4:"IX, VIII", 5:"IX, VI, VII", 6:"II", 7:"I, VIII", 8:"V", 9:"V"},
+    {1:"V", 2:"IV, VI", 3:"III", 4:"IX", 5:"IX, VI", 6:"IX, VII", 7:"II, VIII", 8:"I", 9:"V"},
+    {1:"V", 2:"V, VII", 3:"IV", 4:"III", 5:"IX", 6:"IX, VII", 7:"IX, VII", 8:"II, VI, VII", 9:"I"},
+    {1:"I, VI, VII", 2:"V, VII", 3:"V, VI", 4:"IV", 5:"III", 6:"IX, VI", 7:"IX, VII", 8:"IX, VI, VII", 9:"II"},
+    {1:"II, VI, VII", 2:"I, VIII", 3:"V, VI", 4:"V, VII, VI", 5:"IV, VIII", 6:"III, VI", 7:"IX", 8:"IX", 9:"IX, VII, VI"},
+    {1:"IX", 2:"II, VIII", 3:"III", 4:"V, VII, VI", 5:"V, VIII", 6:"IV", 7:"III, VI", 8:"IX", 9:"IX, VII, VI"},
+    {1:"IX, VIII", 2:"IX", 3:"II", 4:"I", 5:"V", 6:"V", 7:"IV, VI", 8:"VI, VIII", 9:"IX"},
+    {1:"IX, VIII", 2:"IX", 3:"IX, VIII", 4:"II", 5:"I", 6:"V, VIII", 7:"V", 8:"IV, VIII", 9:"III, VIII"},
+    {1:"III", 2:"IX", 3:"IX, VIII", 4:"IX, VIII", 5:"II, VII", 6:"I, VIII", 7:"V", 8:"V", 9:"IV, VIII"},
+    {1:"IV", 2:"III, VI", 3:"IX", 4:"IX, VIII", 5:"IX, VI, VII", 6:"II", 7:"I, VIII", 8:"V", 9:"V"},
+    {1:"V", 2:"IV, VI", 3:"III", 4:"IX", 5:"IX, VI", 6:"IX, VII", 7:"II, VIII", 8:"I", 9:"V"},
+    {1:"V", 2:"V, VII", 3:"IV", 4:"III", 5:"IX", 6:"IX, VII", 7:"IX, VII", 8:"II, VI, VII", 9:"I"},
+    {1:"I, VI, VII", 2:"V, VII", 3:"V, VI", 4:"IV", 5:"III", 6:"IX, VI", 7:"IX, VII", 8:"IX, VI, VII", 9:"II"},
+    {1:"II, VI, VII", 2:"I, VIII", 3:"V, VI", 4:"V, VII, VI", 5:"IV, VIII", 6:"III, VI", 7:"IX", 8:"IX", 9:"IX, VII, VI"},
+    {1:"IX", 2:"II, VIII", 3:"I, VII", 4:"V, VII, VI", 5:"V, VIII", 6:"IV", 7:"III, VI", 8:"IX", 9:"IX, VII, VI"},
+    {1:"IX, VIII", 2:"IX", 3:"II", 4:"I", 5:"V", 6:"V", 7:"IV, VI", 8:"VI, VIII", 9:"IX"},
+    {1:"IX, VIII", 2:"IX", 3:"IX, VIII", 4:"II", 5:"I", 6:"V, VIII", 7:"V", 8:"IV, VIII", 9:"III, VIII"},
+    {1:"III", 2:"IX", 3:"IX, VIII", 4:"IX, VIII", 5:"II, VII", 6:"I, VIII", 7:"V", 8:"V", 9:"IV, VIII"},
+    {1:"IV", 2:"III, VI", 3:"IX", 4:"IX, VIII", 5:"IX, VI, VII", 6:"II", 7:"I, VIII", 8:"V", 9:"V"},
+    {1:"V", 2:"IV, VI", 3:"III", 4:"IX", 5:"IX, VI", 6:"IX, VII", 7:"II, VIII", 8:"I", 9:"V"},
+    {1:"V", 2:"V, VII", 3:"IV", 4:"III", 5:"IX", 6:"IX, VII", 7:"IX, VII", 8:"II, VI, VII", 9:"I"},
+    {1:"I, VI, VII", 2:"V, VII", 3:"V, VI", 4:"IV", 5:"III", 6:"IX, VI", 7:"IX, VII", 8:"IX, VI, VII", 9:"II"},
+    {1:"II, VI, VII", 2:"I, VIII", 3:"V, VI", 4:"V, VII, VI", 5:"IV, VIII", 6:"III, VI", 7:"IX", 8:"IX", 9:"IX, VII, VI"},
+    {1:"IX", 2:"II, VIII", 3:"III", 4:"V, VII, VI", 5:"V, VIII", 6:"IV", 7:"III, VI", 8:"IX", 9:"IX, VII, VI"}
+  ];
+
+  /* --- ФУНКЦИИ ХАРАКТЕРА СОБЫТИЙ --- */
+  function parsePeriodCodes(str) {
+    if (!str) return [];
+    return str.split(',').map(s => s.trim()).filter(s => s);
+  }
+
+  function getPeriodPhase(type, currentIndex, code, pkYear) {
+    let activeStreak = 0; 
+    for (let i = 1; i <= 2; i++) {
+        let pIndex = currentIndex - i;
+        let pCodes = [];
+        if (type === 'day') {
+            if (pIndex < 1) break; 
+            if (!DAILY_DATA[pIndex]) break;
+            pCodes = parsePeriodCodes(DAILY_DATA[pIndex][pkYear]);
+        } else {
+            if (pIndex < 0) break;
+            pCodes = parsePeriodCodes(MONTHLY_DATA[pkYear][pIndex]);
+        }
+        if (pCodes.includes(code)) activeStreak++;
+        else break;
+    }
+    return activeStreak;
+  }
+
+  function generatePeriodCards(type, currentIndex, pkYear) {
+    let codes = [];
+    if(type === 'day') {
+        if (!DAILY_DATA[currentIndex]) return '<div class="small" style="color:#ef4444">Нет данных для этого дня</div>';
+        codes = parsePeriodCodes(DAILY_DATA[currentIndex][pkYear]);
+    }
+    else {
+        codes = parsePeriodCodes(MONTHLY_DATA[pkYear][currentIndex]);
+    }
+
+    if(codes.length === 0) return '<div class="small">Нет данных</div>';
+
+    const INTERPRETATION_SOURCE = (type === 'day') ? DAILY_INTERPRETATIONS : MONTHLY_INTERPRETATIONS;
+
+    let html = '';
+    codes.forEach(code => {
+        const data = INTERPRETATION_SOURCE[code];
+        if(!data) return;
+        const currentPhase = getPeriodPhase(type, currentIndex, code, pkYear);
+        
+        let durationText = type === 'day' ? 'дн.' : 'мес.';
+        let phaseInfo = "";
+        let phaseLabel = type === 'day' ? 'День' : 'Месяц';
+
+        if (data.duration > 1) {
+            let displayPhase = currentPhase + 1; 
+            if (displayPhase > data.duration) displayPhase = data.duration;
+            phaseInfo = `<span class="current-day-indicator">(${phaseLabel} ${displayPhase}/${data.duration})</span>`;
+        }
+
+        html += `<div class="period-card">`;
+        html += `<div class="period-header">
+                    <span class="roman-badge">${code}</span>
+                    <span class="period-info">Длит: ${data.duration} ${durationText} ${phaseInfo}</span>
+                 </div>`;
+        
+        if (data.phases) {
+            html += `<ul class="phase-list">`;
+            data.phases.forEach((text, i) => {
+                let label = ["Первый период", "Второй период", "Третий период"][i];
+                let activeClass = (i === currentPhase) ? 'active-phase' : '';
+                html += `<li class="phase-item ${activeClass}"><span class="phase-label">${label}</span>${text}</li>`;
+            });
+            html += `</ul>`;
+        } else {
+            html += `<div class="general-desc">${data.general}</div>`;
+        }
+        html += `</div>`;
+    });
+    return html;
+  }
+
+  const COMPAT_EXTENDED = {
+    1: {D:[2,3,9], V:[], N:[5], BV:[4,6,7,8]},
+    2: {D:[1,5], V:[4,7], N:[3,6,8,9], BV:[]},
+    3: {D:[1,2,9], V:[4,5,6,7], N:[8], BV:[]},
+    4: {D:[5,6,7,8], V:[], N:[3,9], BV:[1,2]},
+    5: {D:[1,4,6,7], V:[2], N:[3,8,9], BV:[]},
+    6: {D:[4,5,7,8], V:[2], N:[3,9], BV:[1]},
+    7: {D:[4,5,6,8], V:[], N:[3,9], BV:[1,2]},
+    8: {D:[4,5,6,7], V:[9], N:[3], BV:[1,2]},
+    9: {D:[1,2,3], V:[5], N:[4,6,7,8], BV:[]}
+  };
+
+  const YEAR_INTERPRETATIONS = {
+    1: 'Единица символизирует статус, положение человека, карьеру. Позитивные сдвиги со стороны начальства. Хороший период для работы. Это благоприятное время для личностного и карьерного роста, достижения известности, популярности, а также для начинаний (начало бизнеса, карьерного роста). С точки зрения здоровья, Сурья является символом здоровья, поэтому в этот период нужно уделять особое внимание своему самочувствию. Свадьба в этот год приведет к 100% разводу.',
+    2: 'Двойка является символом отношений (как личных, так и деловых контактов). Все время стоят перед выбором, двойственность, нужно будет делать глобальный выбор. Это очень хорошее время для налаживания контактов, расширения клиентской базы и заведения новых знакомств. Однако двойка также ассоциируется с сомнениями и эмоциональными переживаниями.',
+    3: 'Тройка символизирует расширение (экспансию), развитие, оптимизм, а также детей и деньги. Создает ощущения у человека, что он очень богатый, в этот год может быть необоснованные расходы (инвестиции и покупки). Это хороший год для приобретений, инвестиций, бизнеса, учебы и получения удовольствия от жизни. Что-то может происходить на личном фронте. Для женщины Гуру (тройка) является символом мужа, и этот год считается очень хорошим для брака и рождения детей.',
+    4: 'Четверка – это год, когда проявляются в очень сильной степени прарабдха-кармические события (идущие из прошлого), которые повернут ход событий в хорошую или плохую сторону. Что-то произойдетважное, неожиданное. Это сложный и проблемный год. Раху является символом тяжелых кармических заболеваний (появление каких-то болезней). Год четверки неблагоприятен для брака.',
+    5: 'Пятерка – очень хорошее время для начала учебы, познания чего-то, изучения (новые технологии, курсы повышения квалификации). Это также благоприятный год для бизнеса, контактов (особенно деловых). Пятерка идеальна для сдачи экзаменов, учебы, вступления в контакты и занятия бизнесом.',
+    6: 'Шестерка – это год любви, денег, роскоши, бизнеса и приобретений (включая недвижимость и автотранспорт). Это очень хороший год для брака и отношений, расширения и детей.',
+    7: 'Семерка также связана с прарабдха-кармой и означает трансформацию. Это год, когда может произойти все, что угодно, чаще плохое. Кету – это символ сексуальной энергии и Тантры. Семерка также может принести серьезные проблемы со здоровьем. Год семерки не рекомендуется для брака. Если вы уволитесь в этот год, то вам будет сложно найти работу или будет не приятно работать или что-то в этом роде.',
+    8: 'Восьмерка (Шани) ассоциируется с работой, бизнесом, карьерой. Это идеальное время для инвестиций, подписания контрактов и любой систематической, серьезной работы. В этот год реализуется карма , связанная с работой (деятельностью). Хороший год для начала какой-то деятельности. Могут быть задержки, ограничения, но в целом благоприятный год. Для смены работы - этот год подходит хорошо. Девиз года – Труд делает человека свободным. Шани – очень медленная Граха, поэтому все будет развиваться очень медленно. Хорошо для рождения ребенка.',
+    9: 'Девятка – это год, завершающий цикл, часто девятилетний. Это год очень сильной энергии, динамики и активности. Девятка благоприятна для завершения чего-либо. Завершение может быть болезненным, так как Мангала (Марс) ассоциируется с болью. Это нехороший год для брака. Свадьба в этот год приведет к 100% разводу.'
+  };
+
+  const CYCLE_INTERPRETATIONS = {
+    1: {
+      title: '1 (Сурья)',
+      trends: 'личностный рост, стремление к известности, популярности и началу новых циклов. Акцентируются вопросы эго (аханкары).',
+      career: 'Благоприятное время для карьерного роста, налаживания отношений с начальством и достижения статуса/положения в обществе. Хорошо для начала бизнеса.',
+      relations: 'Неблагоприятно для отношений и брака. Человек, вышедший замуж в период Единицы, "обязательно останется один". Проблемы могут быть вызваны вопросами эго.'
+    },
+    2: {
+      title: '2 (Чандра)',
+      trends: 'период, связанный с отношениями, контактами и выбором/двойственностью. Цикл проходит в более эмоциональном ключе.',
+      career: 'Очень хорошее время для расширения клиентской базы. Хорошо для путешествий и отдыха.',
+      relations: 'Очень хорошее время для личных отношений. Цикл благоприятен для знакомств и контактов. Если двойка курирует третий период, то могут начаться отношения.'
+    },
+    3: {
+      title: '3 (Гуру)',
+      trends: 'период расширения (экспансии), развития и оптимизма. Позитивный период в целом.',
+      career: 'Хорош для бизнеса и деятельности, но может привести к необоснованным расходам и иллюзии богатства. Хорошее время для инвестирования или крупных покупок.',
+      relations: 'Благоприятен для отношений (Гуру – символизирует мужа в женском гороскопе). Очень хороший период для зачатия детей.'
+    },
+    4: {
+      title: '4 (Раху)',
+      trends: 'период, когда сильно проявляется прарабдха карма (карма из прошлых жизней). Время трансформации, которое может быть "самым страшным" при определенных комбинациях.',
+      career: 'Возможны неожиданные события. Акцент на делах, которые имеют прарабдха-кармическое значение.',
+      relations: 'Отношения, начатые в этот период, являются прарабдха-кармическими (продолжение отношений из прошлых жизней). Может принести проблемы со здоровьем, онкологию.'
+    },
+    5: {
+      title: '5 (Буддха)',
+      trends: 'период, связанный с интеллектуальной деятельностью и изменениями.',
+      career: 'Очень хорошее время для начала учебы, сдачи экзаменов и получения новых знаний. Благоприятно для бизнеса и деловых контактов.',
+      relations: 'Период асексуален. Подходит для деловых контактов, но не для личных отношений.'
+    },
+    6: {
+      title: '6 (Шукра)',
+      trends: 'период, связанный с комфортом, роскошью и глубинным мистическим познанием.',
+      career: 'Очень хороший период для бизнеса, финансовых операций и покупок. Период благоприятен для обустройства гнезда (ремонт, дизайн интерьера).',
+      relations: 'Период связан с сексом и отношениями. Склонность к поиску удовольствия в жизни.'
+    },
+    7: {
+      title: '7 (Кету)',
+      trends: 'время абсолютной неопределенности, тумана. Период трансформации сознания и изменения взглядов на жизнь. Идеален для йоги и Тантры.',
+      career: 'Неблагоприятен для брака, работы или бизнеса. Может приводить к необдуманным, сумбурным решениям.',
+      relations: 'Отношения, начатые в этот период, являются прарабдха-кармическими. Все проблемы Кету, связанные с отношениями, решаются Тантрой. Есть риск преждевременной смерти и неизлечимых медициной болезней, онкология.'
+    },
+    8: {
+      title: '8 (Шани)',
+      trends: 'период связан с деятельностью, работой. Все процессы развиваются очень медленно, могут быть задержки и ограничения.',
+      career: 'Очень хороший период для начала деятельности, бизнеса, инвестиций, заключения контрактов. Идеален для начала систематической, серьезной работы.',
+      relations: 'Не очень хорош для личной жизни. Отношения часто носят асексуальный или деловой характер. Указывает на перманентные проблемы в личной жизни.'
+    },
+    9: {
+      title: '9 (Мангал)',
+      trends: 'период большой энергии, динамичных и активных процессов. Означает завершение цикла (девятилетнего). Завершение может быть болезненным.',
+      career: 'Хорош для активных, решительных действий, включая судебные иски.',
+      relations: 'Отношения, начатые в этот период, будут темпераментными, бурными, могут закончиться скандалом или разводом.'
+    }
+  };
+
+  const INDEX_TABLE = {
+    '1-1': {year: 'Нейтрально', month: 'Нейтрально', day: 'Нейтрально', index: 5},
+    '1-2': {year: 'Большой друг', month: 'Большой друг', day: 'Большой друг', index: 6},
+    '1-3': {year: 'Большой друг', month: 'Большой друг', day: 'Друг', index: 5},
+    '1-4': {year: 'Большой враг', month: 'Большой враг', day: 'Большой враг', index: 2},
+    '1-5': {year: 'Нейтрально', month: 'Нейтрально', day: 'Нейтрально', index: 5},
+    '1-6': {year: 'Большой враг', month: 'Большой враг', day: 'Враг', index: 3},
+    '1-7': {year: 'Большой враг', month: 'Большой враг', day: 'Друг', index: 3},
+    '1-8': {year: 'Большой враг', month: 'Большой враг', day: 'Нейтрально', index: 2},
+    '1-9': {year: 'Большой друг', month: 'Большой друг', day: 'Друг', index: 4},
+    '2-1': {year: 'Большой друг', month: 'Большой друг', day: 'Нейтрально', index: 4},
+    '2-2': {year: 'Нейтрально', month: 'Нейтрально', day: 'Друг', index: 5},
+    '2-3': {year: 'Нейтрально', month: 'Нейтрально', day: 'Нейтрально', index: 2},
+    '2-4': {year: 'Большой враг', month: 'Большой враг', day: 'Враг', index: 1},
+    '2-5': {year: 'Нейтрально', month: 'Нейтрально', day: 'Большой враг', index: 0},
+    '2-6': {year: 'Нейтрально', month: 'Нейтрально', day: 'Враг', index: 2},
+    '2-7': {year: 'Большой враг', month: 'Большой враг', day: 'Друг', index: 2},
+    '2-8': {year: 'Нейтрально', month: 'Нейтрально', day: 'Нейтрально', index: 1},
+    '2-9': {year: 'Друг', month: 'Друг', day: 'Враг', index: 0},
+    '3-1': {year: 'Большой друг', month: 'Большой друг', day: 'Большой друг', index: -1},
+    '3-2': {year: 'Нейтрально', month: 'Нейтрально', day: 'Друг', index: 5},
+    '3-3': {year: 'Нейтрально', month: 'Нейтрально', day: 'Нейтрально', index: 1},
+    '3-4': {year: 'Враг', month: 'Враг', day: 'Враг', index: 5},
+    '3-5': {year: 'Враг', month: 'Враг', day: 'Враг', index: 0},
+    '3-6': {year: 'Враг', month: 'Враг', day: 'Враг', index: -2},
+    '3-7': {year: 'Враг', month: 'Враг', day: 'Враг', index: 0},
+    '3-8': {year: 'Нейтрально', month: 'Нейтрально', day: 'Большой враг', index: 5},
+    '3-9': {year: 'Большой друг', month: 'Большой друг', day: 'Нейтрально', index: 4},
+    '4-1': {year: 'Друг', month: 'Друг', day: 'Большой враг', index: 3},
+    '4-2': {year: 'Большой враг', month: 'Большой враг', day: 'Большой друг', index: 1},
+    '4-3': {year: 'Враг', month: 'Враг', day: 'Враг', index: 4},
+    '4-4': {year: 'Нейтрально', month: 'Нейтрально', day: 'Враг', index: 5},
+    '4-5': {year: 'Друг', month: 'Друг', day: 'Друг', index: 2},
+    '4-6': {year: 'Друг', month: 'Друг', day: 'Друг', index: 1},
+    '4-7': {year: 'Друг', month: 'Друг', day: 'Друг', index: 0},
+    '4-8': {year: 'Друг', month: 'Друг', day: 'Нейтрально', index: 5},
+    '4-9': {year: 'Нейтрально', month: 'Нейтрально', day: 'Большой враг', index: 1},
+    '5-1': {year: 'Нейтрально', month: 'Нейтрально', day: 'Нейтрально', index: 1},
+    '5-2': {year: 'Большой враг', month: 'Большой враг', day: 'Враг', index: 4},
+    '5-3': {year: 'Нейтрально', month: 'Нейтрально', day: 'Большой враг', index: 1},
+    '5-4': {year: 'Нейтрально', month: 'Нейтрально', day: 'Враг', index: 0},
+    '5-5': {year: 'Нейтрально', month: 'Нейтрально', day: 'Враг', index: 1},
+    '5-6': {year: 'Друг', month: 'Друг', day: 'Враг', index: 0},
+    '5-7': {year: 'Друг', month: 'Друг', day: 'Враг', index: -1},
+    '5-8': {year: 'Друг', month: 'Друг', day: 'Большой враг', index: -2},
+    '5-9': {year: 'Нейтрально', month: 'Нейтрально', day: 'Друг', index: 1},
+    '6-1': {year: 'Друг', month: 'Друг', day: 'Большой враг', index: 0},
+    '6-2': {year: 'Нейтрально', month: 'Нейтрально', day: 'Большой друг', index: 1},
+    '6-3': {year: 'Нейтрально', month: 'Нейтрально', day: 'Враг', index: 2},
+    '6-4': {year: 'Нейтрально', month: 'Нейтрально', day: 'Большой враг', index: -2},
+    '6-5': {year: 'Друг', month: 'Друг', day: 'Большой друг', index: -3},
+    '6-6': {year: 'Нейтрально', month: 'Нейтрально', day: 'Враг', index: 4},
+    '6-7': {year: 'Друг', month: 'Друг', day: 'Нейтрально', index: 3},
+    '6-8': {year: 'Друг', month: 'Друг', day: 'Друг', index: 2},
+    '6-9': {year: 'Нейтрально', month: 'Нейтрально', day: 'Нейтрально', index: 1},
+    '7-1': {year: 'Нейтрально', month: 'Нейтрально', day: 'Нейтрально', index: 1},
+    '7-2': {year: 'Нейтрально', month: 'Нейтрально', day: 'Нейтрально', index: 0},
+    '7-3': {year: 'Враг', month: 'Враг', day: 'Враг', index: 5},
+    '7-4': {year: 'Друг', month: 'Друг', day: 'Нейтрально', index: 1},
+    '7-5': {year: 'Друг', month: 'Друг', day: 'Нейтрально', index: 0},
+    '7-6': {year: 'Друг', month: 'Друг', day: 'Враг', index: 1},
+    '7-7': {year: 'Нейтрально', month: 'Нейтрально', day: 'Враг', index: 0},
+    '7-8': {year: 'Друг', month: 'Друг', day: 'Нейтрально', index: 1},
+    '7-9': {year: 'Нейтрально', month: 'Нейтрально', day: 'Друг', index: 0},
+    '8-1': {year: 'Нейтрально', month: 'Нейтрально', day: 'Большой враг', index: 0},
+    '8-2': {year: 'Большой враг', month: 'Большой враг', day: 'Большой друг', index: -1},
+    '8-3': {year: 'Нейтрально', month: 'Нейтрально', day: 'Враг', index: 0},
+    '8-4': {year: 'Нейтрально', month: 'Нейтрально', day: 'Враг', index: -1},
+    '8-5': {year: 'Друг', month: 'Друг', day: 'Враг', index: -2},
+    '8-6': {year: 'Друг', month: 'Друг', day: 'Враг', index: -3},
+    '8-7': {year: 'Друг', month: 'Друг', day: 'Нейтрально', index: 0},
+    '8-8': {year: 'Нейтрально', month: 'Нейтрально', day: 'Враг', index: -1},
+    '8-9': {year: 'Большой враг', month: 'Большой враг', day: 'Друг', index: -2},
+    '9-1': {year: 'Большой друг', month: 'Большой друг', day: 'Нейтрально', index: -3},
+    '9-2': {year: 'Нейтрально', month: 'Нейтрально', day: 'Большой враг', index: -4},
+    '9-3': {year: 'Большой друг', month: 'Большой друг', day: 'Большой друг', index: -5},
+    '9-4': {year: 'Враг', month: 'Враг', day: 'Большой друг', index: 3},
+    '9-5': {year: 'Большой враг', month: 'Большой враг', day: 'Нейтрально', index: 2},
+    '9-6': {year: 'Враг', month: 'Враг', day: 'Враг', index: 1},
+    '9-7': {year: 'Нейтрально', month: 'Нейтрально', day: 'Нейтрально', index: 0},
+    '9-8': {year: 'Нейтрально', month: 'Нейтрально', day: 'Большой враг', index: -1},
+    '9-9': {year: 'Нейтрально', month: 'Нейтрально', day: 'Враг', index: -2}
+  };
+
+  const PLANET_NAMES = {
+    1: 'Сурья (Солнце)', 2: 'Чандра (Луна)', 3: 'Гуру (Юпитер)',
+    4: 'Раху', 5: 'Буддха (Меркурий)', 6: 'Шукра (Венера)',
+    7: 'Кету', 8: 'Шани (Сатурн)', 9: 'Мангала (Марс)'
+  };
+
+  // ИНИЦИАЛИЗАЦИЯ ДАТЫ ПРИ ЗАГРУЗКЕ
+  (function initDate() {
+      const today = new Date();
+      document.getElementById('targetYear').value = today.getFullYear();
+      document.getElementById('targetMonth').value = today.getMonth() + 1;
+      document.getElementById('targetDay').value = today.getDate();
+  })();
+
+  function reduceTo1to9(n){
+    n = Math.abs(Number(n))|0;
+    if(n <= 0) return 0;
+    while(n>9) n = n.toString().split('').reduce((a,b)=>a+Number(b),0);
+    return n;
+  }
+
+  function jiva(day){ return reduceTo1to9(day); }
+  function dharma(day, month){ return reduceTo1to9(day + month); }
+  function karma(day, month, year){ return reduceTo1to9(day + month + String(year).split('').reduce((a,b)=>a+Number(b),0)); }
+
+  function prarabdhaPK(prevPK, add){ return reduceTo1to9(prevPK + add); }
+  function agamaAK(prevAK, add){ return reduceTo1to9(prevAK + add); }
+
+  function nineYearNumber(year){ return reduceTo1to9(year); }
+  function firstCycleEndAge(karma){ return 36 - karma; }
+  function secondCycleEndAge(karma){ return firstCycleEndAge(karma) + 27; }
+  function thirdCycleEndAge(karma){ return secondCycleEndAge(karma) + 27; }
+  function epochalEventAges(karma, count){
+    const ages = []; let first = firstCycleEndAge(karma);
+    for(let i=0;i<count;i++) ages.push(first + 9*i);
+    return ages;
+  }
+
+  function firstEventNumber(day, month){ return reduceTo1to9(day+month); }
+  function secondEventNumber(day, year){ return reduceTo1to9(day + String(year).split('').reduce((a,b)=>a+Number(b),0)); }
+  function thirdEventNumber(ev1, ev2){ return reduceTo1to9(ev1+ev2); }
+  function fourthEventNumber(month, year){ return reduceTo1to9(month + String(year).split('').reduce((a,b)=>a+Number(b),0)); }
+
+  function compatibility(a,b){
+    if(!COMPAT_EXTENDED[a]) return 'Нейтрально'; 
+    if(COMPAT_EXTENDED[a].D.includes(b)) return 'Друг';
+    if(COMPAT_EXTENDED[a].BV.includes(b)) return 'Большой враг';
+    if(COMPAT_EXTENDED[a].V.includes(b)) return 'Враг';
+    if(COMPAT_EXTENDED[a].N.includes(b)) return 'Нейтрально';
+    return 'Нейтрально'; 
+  }
+
+  function compatibilityColor(a,b){
+    if(!COMPAT_EXTENDED[a]) return 'compat-neutral';
+    if(COMPAT_EXTENDED[a].D.includes(b)) return 'compat-friend';
+    if(COMPAT_EXTENDED[a].BV.includes(b)) return 'compat-enemy';
+    if(COMPAT_EXTENDED[a].V.includes(b)) return 'compat-enemy';
+    return 'compat-neutral';
+  }
+  
+  function indexColor(index){
+    if(index === 'Большой друг' || index === 'Друг') return 'compat-friend';
+    if(index === 'Большой враг' || index === 'Враг') return 'compat-enemy';
+    return 'compat-neutral';
+  }
+
+  function getCycleInterpretation(cycleNum){
+    const interp = CYCLE_INTERPRETATIONS[cycleNum];
+    if(!interp) return '';
+    return `
+    <div class="interp-card">
+        <div class="interp-header">
+            <div class="interp-badge">${cycleNum}</div>
+            <div class="interp-title">${interp.title}</div>
+        </div>
+        <div class="interp-body">
+            <div class="interp-section main">
+                <span class="interp-label">Основные тенденции</span>
+                <div class="interp-text">${interp.trends}</div>
+            </div>
+            <div class="interp-section career">
+                <span class="interp-label">Карьера и Финансы</span>
+                <div class="interp-text">${interp.career}</div>
+            </div>
+            <div class="interp-section love">
+                <span class="interp-label">Отношения</span>
+                <div class="interp-text">${interp.relations}</div>
+            </div>
+        </div>
+    </div>`;
+  }
+
+  function getYearlyNumbers(birthYear, startAge, endAge){
+    const data = [];
+    for(let age = startAge; age <= endAge; age++){
+      const year = birthYear + age;
+      const yearNum = reduceTo1to9(year);
+      data.push({age, year, num: yearNum});
+    }
+    return data;
+  }
+
+  function getColorForValue(value, min, max) {
+    if(max === min) return `rgb(4, 207, 89)`;
+    const normalized = (value - min) / (max - min);
+    const r1 = 189, g1 = 10, b1 = 50;
+    const r2 = 4, g2 = 207, b2 = 89;
+    const r = Math.round(r1 + (r2 - r1) * normalized);
+    const g = Math.round(g1 + (g2 - g1) * normalized);
+    const b = Math.round(b1 + (b2 - b1) * normalized);
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+
+  function generateCalendar(birthDay, birthMonth, birthYear, startDate, endDate){
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const days = [];
+    const daysOfWeek = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+    
+    const j = jiva(birthDay);
+    const dh = dharma(birthDay, birthMonth);
+    
+    for(let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)){
+      const year = d.getFullYear();
+      const month = d.getMonth() + 1;
+      const day = d.getDate();
+      
+      const yearNum = reduceTo1to9(year);
+      const monthNum = reduceTo1to9(month);
+      const dayNum = reduceTo1to9(day);
+      
+      const prYr = prarabdhaPK(dh, yearNum);
+      const agYr = agamaAK(prYr, j);
+      
+      const prMon = prarabdhaPK(prYr, monthNum);
+      const agMon = agamaAK(agYr, monthNum);
+      
+      const prDay = prarabdhaPK(prMon, dayNum);
+      const agDay = agamaAK(agMon, dayNum);
+      const dayCompat = compatibility(prDay, agDay);
+      
+      const tableKey = `${prDay}-${agDay}`;
+      const indexData = INDEX_TABLE[tableKey] || {index: 0, day: 'Нейтрально'};
+      const dayIndex = indexData.day;
+      
+      const yearWeight = 0.485;
+      const monthWeight = 0.33;
+      const dayWeight = 0.165;
+      
+      const compatToValue = {
+        'Большой друг': 2,
+        'Друг': 1,
+        'Нейтрально': 0,
+        'Враг': -1,
+        'Большой враг': -2
+      };
+      
+      const yrCompat = compatibility(prYr, agYr);
+      const monCompat = compatibility(prMon, agMon);
+
+      const yearValue = compatToValue[yrCompat] || 0;
+      const monthValue = compatToValue[monCompat] || 0;
+      const dayValue = compatToValue[dayCompat] || 0;
+      
+      const weightedIndex = (yearValue * yearWeight) + (monthValue * monthWeight) + (dayValue * dayWeight);
+      
+      days.push({
+        date: new Date(d),
+        dayOfWeek: daysOfWeek[d.getDay()], 
+        yearCompat: compatibilityColor(prYr, agYr),
+        monthCompat: compatibilityColor(prMon, agMon),
+        dayCompat: compatibilityColor(prDay, agDay),
+        dayIndex: dayIndex,
+        dayIndexColor: indexColor(dayIndex),
+        prDay: prDay,
+        agDay: agDay,
+        dayNum: dayNum,
+        indexValue: weightedIndex
+      });
+    }
+    
+    return days;
+  }
+
+  let dailyChartInstance = null;
+
+  function renderDailyChart(days) {
+    let html = '<div style="display:flex;flex-direction:column;gap:16px">';
+    
+    html += '<div style="font-size:12px;font-weight:600;margin-bottom:8px;color:#f3f4f6">График индекса дня (синтетический)</div>';
+    html += '<div class="chart-container"><canvas id="dailyChart"></canvas></div>';
+    
+    const values = days.map(d => d.indexValue);
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+
+    html += '<div class="calendar-view" style="font-size:11px; overflow-x:auto">';
+    html += '<div style="margin-bottom:2px; width: max-content"><strong>Индекс дня</strong></div><div style="width: max-content">';
+    days.forEach(d=>{
+      const color = getColorForValue(d.indexValue, minValue, maxValue);
+      html += `<span class="day-cell" style="background:${color};display:inline-flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:600;cursor:default" title="${d.dayOfWeek}">${d.dayOfWeek}</span>`;
+    });
+    html += '</div>';
+    
+    html += '<div style="margin:4px 0 2px; width: max-content"><strong>День</strong></div><div style="width: max-content">';
+    days.forEach(d=>{
+      html += `<span class="day-cell ${d.dayCompat}" title="${d.date.toLocaleDateString('ru-RU')}" style="display:inline-flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:600">${d.date.getDate()}</span>`;
+    });
+    html += '</div>';
+    
+    html += '<div style="margin:4px 0 2px; width: max-content"><strong>Месяц</strong></div><div style="width: max-content">';
+    days.forEach((d,i)=>{
+      const monthNum = d.date.getMonth() + 1;
+      html += `<span class="day-cell ${d.monthCompat}" style="display:inline-flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:600">${monthNum}</span>`;
+    });
+    html += '</div>';
+    
+    html += '<div style="margin:4px 0 2px; width: max-content"><strong>Год</strong></div><div style="width: max-content">';
+    days.forEach((d,i)=>{
+      const yearLast2 = String(d.date.getFullYear()).slice(-2);
+      html += `<span class="day-cell ${d.yearCompat}" style="display:inline-flex;align-items:center;justify-content:center;font-size:8px;color:#fff;font-weight:600">${yearLast2}</span>`;
+    });
+    html += '</div>';
+    
+    html += '<div style="margin-top:8px;font-size:10px;color:#9ca3af">';
+    html += '<span style="display:inline-block;width:12px;height:12px;background:linear-gradient(to right, #BD0A32, #04CF59);border-radius:2px;vertical-align:middle;margin-right:4px"></span>';
+    html += 'Шкала от неблагоприятных (красный) до благоприятных (зеленый) дней';
+    html += '</div></div></div>';
+
+    return html;
+  }
+
+  function initChartJs(days) {
+    const ctx = document.getElementById('dailyChart');
+    if(!ctx) return;
+
+    if(dailyChartInstance) {
+      dailyChartInstance.destroy();
+    }
+
+    const values = days.map(d => d.indexValue);
+    const minVal = Math.min(...values);
+    const maxVal = Math.max(...values);
+
+    const labels = days.map(d => d.date.toLocaleDateString('ru-RU', {day: 'numeric', month: 'numeric'}));
+    const dataPoints = days.map(d => d.indexValue);
+    const backgroundColors = days.map(d => getColorForValue(d.indexValue, minVal, maxVal));
+
+    dailyChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Индекс дня',
+          data: dataPoints,
+          borderColor: '#3b82f6',
+          borderWidth: 2,
+          tension: 0.4,
+          pointBackgroundColor: backgroundColors,
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 1,
+          pointRadius: 5,
+          pointHoverRadius: 7
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          intersect: false,
+          mode: 'index',
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1f2937',
+            titleColor: '#f3f4f6',
+            bodyColor: '#e5e7eb',
+            borderColor: '#374151',
+            borderWidth: 1,
+            padding: 10,
+            callbacks: {
+              title: function(context) {
+                 const idx = context[0].dataIndex;
+                 return days[idx].date.toLocaleDateString('ru-RU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+              },
+              label: function(context) {
+                 const idx = context.dataIndex;
+                 const d = days[idx];
+                 return [ `Индекс: ${d.indexValue.toFixed(3)}` ];
+              }
+            }
+          }
+        },
+        scales: {
+          x: { ticks: { color: '#9ca3af', font: {size: 10} }, grid: { color: '#374151', display: false } },
+          y: { ticks: { color: '#9ca3af', font: {size: 10} }, grid: { color: '#374151', borderDash: [5, 5] } }
+        }
+      }
+    });
+  }
+
+function drawCycles(birthYear, birthMonth, birthDay, karma, ages, evNums, jivaNum) {
+  const svg = document.getElementById('cyclesSvg');
+  const vis = document.getElementById('visualization');
+  if (!svg || !vis) return;
+
+  vis.style.display = 'block';
+
+  const currentYear = new Date().getFullYear();
+  const birthAge = currentYear - birthYear;
+
+  const cycle1End = 36 - karma;
+  const cycle2End = cycle1End + 27;
+  const cycle3End = cycle2End + 27;
+
+  const maxAge = cycle3End;
+
+  const cycle1Num = reduceTo1to9(birthMonth);
+  const cycle2Num = reduceTo1to9(birthDay);
+  const cycle3Num = reduceTo1to9(birthYear);
+
+  setTimeout(() => {
+    const rect = svg.getBoundingClientRect();
+    const width = rect.width > 0 ? rect.width : (svg.parentElement.clientWidth || 1200);
+
+    const height = 550;
+    const padding = 80;
+
+    const graphWidth = width - padding * 2;
+    const graphHeight = height - padding * 2;
+
+    svg.innerHTML = '';
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    svg.style.height = height + "px";
+
+    const axisY = padding + graphHeight;
+
+    function ageToX(age) {
+      return padding + (age / maxAge) * graphWidth;
+    }
+
+    function getFillColor(num1, num2) {
+      const status = compatibility(num1, num2);
+      switch (status) {
+        case 'Большой друг':
+        case 'Друг': return '#10b981';
+        case 'Нейтрально': return '#f59e0b';
+        case 'Враг':
+        case 'Большой враг': return '#ef4444';
+        default: return '#6b7280';
+      }
+    }
+
+    const cycleRanges = [{start: 0, end: cycle1End, num: cycle1Num}, {start: cycle1End, end: cycle2End, num: cycle2Num}, {start: cycle2End, end: cycle3End, num: cycle3Num}];
+
+    cycleRanges.forEach(range => {
+      const fillColor = getFillColor(range.num, karma);
+      const xStart = ageToX(range.start);
+      const xEnd = ageToX(Math.min(range.end, maxAge));
+      const barWidth = xEnd - xStart;
+      if (barWidth > 0) {
+        svg.innerHTML += `<rect x="${xStart}" y="${axisY + 4}" width="${barWidth}" height="6" fill="${fillColor}" opacity="1" />`;
+      }
+    });
+
+    for (let a = 0; a <= maxAge; a += 5) {
+      const x = ageToX(a);
+      const isDecade = a % 10 === 0;
+      const tickHeight = isDecade ? 10 : 5;
+      svg.innerHTML += `<line x1="${x}" y1="${axisY}" x2="${x}" y2="${axisY + tickHeight}" stroke="#4b5563" stroke-width="1" />`;
+      svg.innerHTML += `<text x="${x}" y="${axisY + 55}" text-anchor="middle" font-size="10" fill="#6b7280">${a}</text>`;
+    }
+
+    cycleRanges.forEach(range => {
+      const fillColor = getFillColor(range.num, karma);
+      let path = `M${ageToX(range.start)},${axisY}`;
+      for (let age = range.start; age <= range.end; age += 0.5) {
+        if (age > maxAge) break;
+        const x = ageToX(age);
+        let phase = 0;
+        if (age <= cycle1End) phase = age / cycle1End;
+        else if (age <= cycle2End) phase = (age - cycle1End) / 27;
+        else phase = (age - cycle2End) / 27;
+        const y = axisY - Math.sin(phase * Math.PI) * (graphHeight * 0.75);
+        path += ` L${x},${y}`;
+      }
+      path += ` L${ageToX(Math.min(range.end, maxAge))},${axisY} Z`;
+      svg.innerHTML += `<path d="${path}" fill="${fillColor}" fill-opacity="0.4" stroke="none" />`;
+    });
+
+    ages.forEach((eventStartAge, index) => {
+      if (index >= 4) return;
+      const eventNum = evNums[index];
+      const fillColor = getFillColor(eventNum, jivaNum);
+      const startFill = eventStartAge;
+      const endFill = eventStartAge + 9;
+      let fillPath = `M${ageToX(startFill)},${axisY}`;
+      for (let age = startFill; age <= endFill; age += 0.2) {
+        if (age > maxAge) break;
+        const x = ageToX(age);
+        let majorPhase = 0;
+        if (age <= cycle1End) majorPhase = age / cycle1End;
+        else if (age <= cycle2End) majorPhase = (age - cycle1End) / 27;
+        else majorPhase = (age - cycle2End) / 27;
+        const baseY = axisY - Math.sin(majorPhase * Math.PI) * (graphHeight * 0.75);
+        let dist = (age - cycle1End) % 9;
+        if (dist < 0) dist += 9;
+        const offset9 = Math.sin((dist / 9) * Math.PI) * (graphHeight * 0.15);
+        const y = baseY - offset9;
+        fillPath += ` L${x},${y}`;
+      }
+      fillPath += ` L${ageToX(Math.min(endFill, maxAge))},${axisY} Z`;
+      svg.innerHTML += `<path d="${fillPath}" fill="${fillColor}" fill-opacity="0.7" stroke="none" />`;
+    });
+
+    svg.innerHTML += `<line x1="${padding}" y1="${axisY}" x2="${width-padding}" y2="${axisY}" stroke="#cbd5e1" stroke-width="2"/>`;
+
+    const nineYearMarkers = [];
+    for (let a = cycle1End; a >= 0; a -= 9) nineYearMarkers.push(a);
+    for (let a = cycle1End + 9; a <= maxAge; a += 9) nineYearMarkers.push(a);
+    nineYearMarkers.sort((a, b) => a - b);
+
+    // Добавляем получение данных по годам для подписей
+    const yearlyData = getYearlyNumbers(birthYear, 0, maxAge);
+
+    let path27 = `<path d="M${padding},${axisY}`;
+    for (let age = 0; age <= maxAge; age += 0.5) {
+      const x = ageToX(age);
+      let phase = 0;
+      if (age <= cycle1End) phase = age / cycle1End;
+      else if (age <= cycle2End) phase = (age - cycle1End) / 27;
+      else phase = (age - cycle2End) / 27;
+      const y = axisY - Math.sin(phase * Math.PI) * (graphHeight * 0.75);
+      path27 += ` L${x},${y}`;
+    }
+    path27 += `" fill="none" stroke="#2b6ef6" stroke-width="3" opacity="0.6"/>`;
+    svg.innerHTML += path27;
+
+    let path9 = `<path d="M${padding},${axisY}`;
+    for (let age = 0; age <= maxAge; age += 0.2) {
+      const x = ageToX(age);
+      let majorPhase = 0;
+      if (age <= cycle1End) majorPhase = age / cycle1End;
+      else if (age <= cycle2End) majorPhase = (age - cycle1End) / 27;
+      else majorPhase = (age - cycle2End) / 27;
+      const baseY = axisY - Math.sin(majorPhase * Math.PI) * (graphHeight * 0.75);
+      let dist = (age - cycle1End) % 9;
+      if (dist < 0) dist += 9;
+      const offset9 = Math.sin((dist / 9) * Math.PI) * (graphHeight * 0.15);
+      const y = baseY - offset9;
+      path9 += ` L${x},${y}`;
+    }
+    path9 += `" fill="none" stroke="#10b981" stroke-width="2" opacity="0.8"/>`;
+    svg.innerHTML += path9;
+
+    nineYearMarkers.forEach(age => {
+      const x = ageToX(age);
+      svg.innerHTML += `<circle cx="${x}" cy="${axisY}" r="5" fill="#1f2937" stroke="#f59e0b" stroke-width="2" />`;
+      svg.innerHTML += `<text x="${x}" y="${axisY+25}" text-anchor="middle" font-size="11" fill="#f59e0b" font-weight="bold">${age}</text>`;
+    });
+
+    // Рисуем маленькие точки для каждого года и подписываем год
+    yearlyData.forEach(({age, year}) => {
+        const x = ageToX(age);
+        let majorPhase = 0;
+        if (age <= cycle1End) majorPhase = age / cycle1End;
+        else if (age <= cycle2End) majorPhase = (age - cycle1End) / 27;
+        else majorPhase = (age - cycle2End) / 27;
+        const baseY = axisY - Math.sin(majorPhase * Math.PI) * (graphHeight * 0.75);
+        let dist = (age - cycle1End) % 9;
+        if (dist < 0) dist += 9;
+        const offset9 = Math.sin((dist / 9) * Math.PI) * (graphHeight * 0.15);
+        const y = baseY - offset9;
+
+        // Точка
+        svg.innerHTML += `<circle cx="${x}" cy="${y}" r="2.5" fill="#ffffff" style="filter: drop-shadow(0 0 3px #3b82f6);"/>`;
+        // Год (вертикально)
+        const textY = y - 15;
+        svg.innerHTML += `<text x="${x}" y="${textY}" class="year-label-neon" text-anchor="start" transform="rotate(-90, ${x}, ${textY})">${year}</text>`;
+    });
+
+    ages.forEach((age, i) => {
+      if (age > maxAge) return;
+      const x = ageToX(age);
+      let majorPhase = 0;
+      if (age <= cycle1End) majorPhase = age / cycle1End;
+      else if (age <= cycle2End) majorPhase = (age - cycle1End) / 27;
+      else majorPhase = (age - cycle2End) / 27;
+      const arcHeightY = axisY - Math.sin(majorPhase * Math.PI) * (graphHeight * 0.75);
+      
+      // ИЗМЕНЕНИЕ: Поднимаем значение и звезду на ~45 пикселей вверх
+      const y = arcHeightY - 110; 
+      
+      svg.innerHTML += `<text x="${x}" y="${y}" text-anchor="middle" font-size="30" fill="#ef4444" style="filter: drop-shadow(0px 0px 2px rgba(0,0,0,0.5));">★</text>`;
+      svg.innerHTML += `<text x="${x}" y="${y-15}" text-anchor="middle" font-size="14" fill="#ef4444" font-weight="bold">${age} лет</text>`;
+      svg.innerHTML += `<text x="${x}" y="${y+35}" text-anchor="middle" font-size="12" fill="#e5e7eb" style="text-shadow: 0 1px 2px #000;">${evNums[i]}</text>`;
+      
+      // Пунктирная линия вниз к оси
+      svg.innerHTML += `<line x1="${x}" y1="${y+15}" x2="${x}" y2="${axisY}" stroke="#ef4444" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>`;
+    });
+
+    if (birthAge >= 0 && birthAge <= maxAge) {
+      const x = ageToX(birthAge);
+      svg.innerHTML += `<line x1="${x}" y1="${padding}" x2="${x}" y2="${axisY}" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="5,5" opacity="0.8"/>`;
+      svg.innerHTML += `<text x="${x}" y="${padding-10}" text-anchor="middle" font-size="14" fill="#8b5cf6" font-weight="bold">Сейчас (${birthAge})</text>`;
+    }
+
+    [cycle1End, cycle2End, cycle3End].forEach(age => {
+      if (age > 0 && age <= maxAge) {
+        const x = ageToX(age);
+        svg.innerHTML += `<line x1="${x}" y1="${axisY-10}" x2="${x}" y2="${axisY+10}" stroke="#2b6ef6" stroke-width="3"/>`;
+      }
+    });
+
+    svg.innerHTML += `<text x="${width/2}" y="35" text-anchor="middle" font-size="18" fill="#f3f4f6" font-weight="bold">Жизненные циклы и эпохальные события</text>`;
+  }, 10);
+}
+  const out = document.getElementById('output');
+  const btn = document.getElementById('btnCalc');
+  const btnReset = document.getElementById('btnReset');
+
+  btn.addEventListener('click', ()=>{
+    const day = Number(document.getElementById('birthDay').value);
+    const month = Number(document.getElementById('birthMonth').value);
+    const year = Number(document.getElementById('birthYear').value);
+    const tYear = Number(document.getElementById('targetYear').value);
+    const tMonth = Number(document.getElementById('targetMonth').value);
+    const tDay = Number(document.getElementById('targetDay').value);
+
+    const j = jiva(day);
+    const dh = dharma(day, month);
+    const kr = karma(day, month, year);
+
+    const yearNum = reduceTo1to9(String(tYear).split('').reduce((a,b)=>a+Number(b),0));
+
+    const prYr = prarabdhaPK(dh, yearNum);
+    const agYr = agamaAK(prYr, j);
+
+    const monthNum = reduceTo1to9(tMonth);
+    const prMon = prarabdhaPK(prYr, monthNum);
+    
+    const agMon = agamaAK(agYr, monthNum);
+
+    const dayNum = reduceTo1to9(tDay);
+    const prDay = prarabdhaPK(prMon, dayNum);
+    const agDay = agamaAK(agMon, dayNum);
+
+    const nineCycle=[];
+    for(let y=tYear;y<tYear+9;y++) nineCycle.push({y,num:nineYearNumber(y)});
+
+    const firstEnd=firstCycleEndAge(kr);
+    const secondEnd=secondCycleEndAge(kr);
+    const thirdEnd=thirdCycleEndAge(kr);
+
+    const ages=epochalEventAges(kr,4);
+    const ev1=firstEventNumber(day, month);
+    const ev2=secondEventNumber(day, year);
+    const ev3=thirdEventNumber(ev1, ev2);
+    const ev4=fourthEventNumber(month, year);
+    const evNums=[ev1,ev2,ev3,ev4];
+
+    const startDate = new Date(tYear, tMonth - 1, tDay);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 29);
+    
+    const calendarDays = generateCalendar(day, month, year, startDate, endDate);
+    const calendarHTML = renderDailyChart(calendarDays);
+
+    const cycle1Num = reduceTo1to9(month);
+    const cycle2Num = reduceTo1to9(day);
+    const cycle3Num = reduceTo1to9(year);
+
+    // Расчет текущего возраста и ритма
+    const birthAge = tYear - year;
+    let lifeRhythmNum = birthAge % 9;
+    if (lifeRhythmNum === 0) lifeRhythmNum = 9; // 0 соответствует 9
+    const rhythmData = LIFE_RHYTHMS[lifeRhythmNum];
+
+    let html='';
+    html+=`<h3>Вычисления</h3>`;
+    html+=`<div class="row">`;
+    html+=`<div class="result-flex">`;
+    html+=`<div class="result" style="font-weight:bold; color:#60a5fa">Джива = ${j}</div>`;
+    html+=`<div class="result" style="font-weight:bold; color:#a78bfa">Дхарма = ${dh}</div>`;
+    html+=`<div class="result" style="font-weight:bold; color:#34d399">Карма = ${kr}</div>`;
+    html+=`</div>`;
+    html+=`</div>`;
+    
+    html+=`<h4>Календарь прогноза</h4>`;
+    html+=`<div class="forecast-section">`;
+    html+=calendarHTML;
+    
+    // --- ВСТАВКА: ХАРАКТЕР СОБЫТИЙ ---
+    html += `<div class="period-section">`;
+    
+    // Левая колонка: День
+    html += `<div>`;
+    html += `<div class="period-block-title">☀️ Характер событий на День (${tDay}.${tMonth})</div>`;
+    html += generatePeriodCards('day', tDay, prYr);
+    html += `</div>`;
+
+    // Правая колонка: Месяц
+    html += `<div>`;
+    html += `<div class="period-block-title">📅 Характер событий на Месяц (${tMonth})</div>`;
+    html += generatePeriodCards('month', tMonth - 1, prYr);
+    html += `</div>`;
+    
+    html += `</div>`;
+    // --- КОНЕЦ ВСТАВКИ ---
+
+    html+=`</div>`;
+    
+// Формирование HTML для блока 9-летнего цикла
+    let nineYearHTML = `<div class="nine-year-block">`;
+    
+    // Левая часть со списком годов (увеличенный шрифт через класс .nine-year-list)
+    nineYearHTML += `<div style="min-width:140px">
+                        <div class="nine-year-title">9-летний цикл</div>
+                        <pre class="nine-year-list">${nineCycle.map(n=>`${n.y} &rarr; ${n.num}`).join('\n')}</pre>
+                     </div>`;
+                     
+    // Правая часть с текстом (увеличенный шрифт через класс .nine-year-text)
+    nineYearHTML += `<div style="flex:1;">`;
+    nineYearHTML += `<div class="nine-year-title">Интерпретация для числа ${nineCycle[0].num}:</div>`;
+    nineYearHTML += `<div class="nine-year-text">`;
+    nineYearHTML += (YEAR_INTERPRETATIONS[nineCycle[0].num] || 'Нет интерпретации для данного числа.');
+    nineYearHTML += `</div></div></div>`;
+    
+    // --- НОВАЯ СЕКЦИЯ: РИТМЫ ЖИЗНИ (ТАБЛИЦА) ---
+    // Добавляем к nineYearHTML, чтобы отображалось в блоке визуализации снизу
+    nineYearHTML += `<h4>Прогноз событий (ритмы) по годам жизни</h4>`;
+    
+    // Карточка текущего статуса
+    nineYearHTML += `<div class="interp-card" style="margin-bottom: 20px; border-left: 5px solid ${rhythmData.color};">`;
+    nineYearHTML += `<div class="interp-body" style="grid-template-columns: 1fr;">`;
+    nineYearHTML += `<div>`;
+    nineYearHTML += `<div style="font-size: 1.2em; font-weight: bold; margin-bottom: 10px; color: ${rhythmData.color};">`;
+    nineYearHTML += `Ваш текущий возраст: ${birthAge} лет &rarr; Ритм: ${lifeRhythmNum} (${rhythmData.graha})`;
+    nineYearHTML += `</div>`;
+    nineYearHTML += `<div class="interp-text" style="font-size: 14px;">${rhythmData.trends}</div>`;
+    nineYearHTML += `</div>`;
+    nineYearHTML += `</div>`;
+    nineYearHTML += `</div>`;
+    
+    // Таблица 1-108
+    nineYearHTML += `<div style="overflow-x: auto; background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 16px;">`;
+    nineYearHTML += `<div class="rhythm-grid-container">`;
+    
+    // Заголовки (1-9)
+    for(let i=1; i<=9; i++) {
+         nineYearHTML += `<div class="rhythm-header-cell" style="color: ${LIFE_RHYTHMS[i].color}; font-weight: bold;">
+            <div style="font-size: 1.2em;">${i}</div>
+            <div style="font-size: 0.75em; text-transform: uppercase;">${LIFE_RHYTHMS[i].graha.split(' ')[0]}</div>
+         </div>`;
+    }
+    
+    // Ячейки 1-108
+    for(let age=1; age<=108; age++) {
+         let rNum = (age % 9) || 9;
+         let isCurrent = (age === birthAge);
+         // Стили
+         let bg = isCurrent ? LIFE_RHYTHMS[rNum].color : '#111827';
+         let color = isCurrent ? '#000' : '#9ca3af';
+         let border = isCurrent ? '2px solid #fff' : '1px solid #374151';
+         let weight = isCurrent ? 'bold' : 'normal';
+         let shadow = isCurrent ? `box-shadow: 0 0 15px ${LIFE_RHYTHMS[rNum].color};` : '';
+         
+         nineYearHTML += `<div class="rhythm-cell" style="background: ${bg}; color: ${color}; border: ${border}; font-weight: ${weight}; ${shadow}">
+            ${age}
+         </div>`;
+    }
+    
+    nineYearHTML += `</div></div>`; // Закрываем grid и wrapper
+    
+    document.getElementById('nineYearOutput').innerHTML = nineYearHTML;
+
+    html+=`<h4>Три жизненных цикла</h4>`;
+    html+=`<div class="result">`;
+    html+=`Первый цикл заканчивается в возрасте ${firstEnd} (число цикла: ${cycle1Num})<br>`;
+    html+=`Второй цикл заканчивается в возрасте ${secondEnd} (число цикла: ${cycle2Num})<br>`;
+    html+=`Третий цикл заканчивается в возрасте ${thirdEnd} (число цикла: ${cycle3Num})`;
+    html+=`</div>`;
+    
+    html+=`<div class="interp-grid">`;
+    html+=getCycleInterpretation(cycle1Num);
+    html+=getCycleInterpretation(cycle2Num);
+    html+=getCycleInterpretation(cycle3Num);
+    html+=`</div>`;
+    
+    html+=`<h4>Эпохальные события</h4><div class="result">`;
+    for(let i=0;i<ages.length;i++){
+      html+=`Событие ${i+1}: возраст ${ages[i]}, число события ${evNums[i]}, совместимость с Джива(${j}): ${compatibility(evNums[i], j)}<br>`;
+    }
+    html+=`</div>`;
+
+    out.innerHTML=html;
+    
+    initChartJs(calendarDays);
+    
+    drawCycles(year, month, day, kr, ages, evNums, j);
+  });
+
+  btnReset.addEventListener('click',()=>{
+    document.getElementById('birthDay').value=7;
+    document.getElementById('birthMonth').value=3;
+    document.getElementById('birthYear').value=1982;
+    
+    const today = new Date();
+    document.getElementById('targetYear').value = today.getFullYear();
+    document.getElementById('targetMonth').value = today.getMonth() + 1;
+    document.getElementById('targetDay').value = today.getDate();
+
+    document.getElementById('output').innerHTML='';
+    document.getElementById('nineYearOutput').innerHTML='';
+    document.getElementById('visualization').style.display='none';
+    if(dailyChartInstance) {
+       dailyChartInstance.destroy();
+       dailyChartInstance = null;
+    }
+  });
+})();
+</script>
+</body>
+</html>
