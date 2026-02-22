@@ -1,31 +1,10 @@
-<!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Нумерологический калькулятор</title>
 </head>
 <body>
-    <h1>Нумерологический калькулятор</h1>
-    <form id="calculator">
-        <label for="number">Введите число:</label>
-        <input type="number" id="number" name="number" required>
-        <button type="submit">Рассчитать</button>
-    </form>
-    <div id="result"></div>
-    <script>
-        document.getElementById('calculator').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const number = parseInt(document.getElementById('number').value);
-            const resultElement = document.getElementById('result');
-            const result = calculateNumerology(number);
-            resultElement.innerHTML = `Результат: ${result}`;
-        });
-
-        function calculateNumerology(num) {
-            // Ваш алгоритм для нумерологии
-            return num % 9 + 1; // Пример простого алгоритма
-        }
-    </script>
+    <h1>Welcome to the Numerology Calculator</h1>
+    <p>This is a brief introduction to the features offered by the calculator.</p>
+    <!-- Add more content here -->
 </body>
 </html>
